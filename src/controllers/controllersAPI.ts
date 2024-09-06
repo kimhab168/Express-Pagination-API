@@ -29,10 +29,9 @@ export const getAllData = async (
     const filters = req.query.filters
       ? JSON.parse(req.query.filters as string)
       : {};
-    console.log(filters); //{stock:{min:10,max:100}} //
+    console.log(filters); //{stock:{min:10,max:100}}
 
     const newFilters: any = {};
-    //TODO:
     for (let i in filters) {
       if (typeof filters[i] === "object") {
         newFilters[i] = {};
@@ -43,12 +42,10 @@ export const getAllData = async (
             newFilters[i]["$lte"] = filters[i][j];
           }
         }
-        console.log("get:", newFilters[i]);
       } else {
         newFilters[i] = filters[i];
       }
     }
-    // console.log(newFilters);
 
     //STEP 3: Apply Sort
     const sortOrder: 1 | -1 =
@@ -58,7 +55,7 @@ export const getAllData = async (
       : "name";
 
     //STEP 4: Execute Query
-    const items = await ItemModel.find()
+    const items = await ItemModel.find(newFilters)
       .skip(skip)
       .limit(pageLimits)
       .sort({ [sortField]: sortOrder });
@@ -68,7 +65,7 @@ export const getAllData = async (
       error.statusCode = 404;
       throw error;
     }
-    const totalItems = await ItemModel.countDocuments();
+    const totalItems = await ItemModel.countDocuments(newFilters);
     const totalPages = Math.ceil(totalItems / pageLimits);
 
     res.json({
