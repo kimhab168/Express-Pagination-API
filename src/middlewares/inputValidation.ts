@@ -27,13 +27,15 @@ export const checkInputValidate = async (
     });
   }
 };
+
+//flexible local middleware
 export function checkInputValidation(Schema: Schema) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await Schema.validate(req.body, { abortEarly: false })
+      await Schema.validate(req.body, { abortEarly: false });
       next();
     } catch (error) {
-      return res.status(400).json({ message: "Invalidate", error: error })
+      return res.status(400).json({ message: "Invalidate", error: error });
     }
-  }
+  };
 }
