@@ -6,41 +6,49 @@ import { AppError } from "../middlewares/handleErrors";
 interface filterQuery {
   [key: string]: any;
 }
-
+interface fieldType {
+  name: string;
+  price: number | { min: number; max: number };
+  category: string;
+  stock: number | { min: number; max: number };
+}
 export const getAllData = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    //STEP 1: Apply Paagination
+    //STEP 1: Apply Pagination
     const pageLimits: number = req.query.limit
       ? parseInt(`${req.query.limit}`)
       : 10;
     const page: number = req.query.page ? parseInt(`${req.query.page}`) : 1;
     const skip: number = (page - 1) * pageLimits;
 
-    //STEP 2: Apply Filter
-    const filterQ: filterQuery = {};
-    const { name, category, price, stock } = req.query;
-    if (name) {
-      filterQ.name = name as string;
-    }
-    if (category) {
-      filterQ.category = category as string;
-    }
-    if (price) {
-      const parsedPrice = parseInt(price as string);
-      if (!isNaN(parsedPrice)) {
-        filterQ.price = parsedPrice;
+    //Apply Filter 2
+    const filters = req.query.filters
+      ? JSON.parse(req.query.filters as string)
+      : {};
+    console.log(filters); //{stock:{min:10,max:100}} //
+
+    const newFilters: any = {};
+    //TODO:
+    for (let i in filters) {
+      if (typeof filters[i] === "object") {
+        newFilters[i] = {};
+        for (let j in filters[i]) {
+          if (j === "min") {
+            newFilters[i]["$gte"] = filters[i][j];
+          } else {
+            newFilters[i]["$lte"] = filters[i][j];
+          }
+        }
+        console.log("get:", newFilters[i]);
+      } else {
+        newFilters[i] = filters[i];
       }
     }
-    if (stock) {
-      const parsedStock = parseInt(stock as string);
-      if (!isNaN(parsedStock)) {
-        filterQ.stock = parsedStock;
-      }
-    }
+    // console.log(newFilters);
 
     //STEP 3: Apply Sort
     const sortOrder: 1 | -1 =
@@ -50,7 +58,7 @@ export const getAllData = async (
       : "name";
 
     //STEP 4: Execute Query
-    const items = await ItemModel.find(filterQ)
+    const items = await ItemModel.find()
       .skip(skip)
       .limit(pageLimits)
       .sort({ [sortField]: sortOrder });
@@ -60,7 +68,7 @@ export const getAllData = async (
       error.statusCode = 404;
       throw error;
     }
-    const totalItems = await ItemModel.countDocuments(filterQ);
+    const totalItems = await ItemModel.countDocuments();
     const totalPages = Math.ceil(totalItems / pageLimits);
 
     res.json({
