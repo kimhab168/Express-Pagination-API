@@ -6,6 +6,7 @@ export interface AppError extends Error {
 }
 
 export const handleError = (err: AppError, req: Request, res: Response) => {
+  // Syntax: parameter: error, req, res
   const statusCode = err.statusCode || 500;
   const Status = err.message || "`Something went wrong`";
   res.status(statusCode).json({

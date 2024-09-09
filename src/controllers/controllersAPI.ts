@@ -63,7 +63,7 @@ export const getAllData = async (
       const error = new Error("Cannot Find!") as AppError;
       error.message = `No Items found!`;
       error.statusCode = 404;
-      throw error;
+      return next(error);
     }
     const totalItems = await ItemModel.countDocuments(newFilters);
     const totalPages = Math.ceil(totalItems / pageLimits);
@@ -107,8 +107,9 @@ export const createData = async (
     // @ts-ignore
     if (error.code === 11000) {
       const error = new Error("Cannot Find!") as AppError;
-      error.message = `${Object.keys(error.name)} already exist`;
+      error.message = `${error.name} already exist`;
       error.statusCode = 400;
+      return next(error);
     }
     next(error);
   }
@@ -128,7 +129,7 @@ export const updateByID = async (
       const error = new Error("Cannot Find!") as AppError;
       error.message = `Item ${itemId} not found!`;
       error.statusCode = 404;
-      throw error;
+      return next(error);
     }
 
     res.status(200).send(update);
@@ -152,7 +153,7 @@ export const deleteByID = async (
       const error = new Error("Cannot Find!") as AppError;
       error.message = `Item ${id} not found!`;
       error.statusCode = 404;
-      throw error;
+      return next(error);
     }
 
     res.status(204).send(`Item ${id} has been Updated!`);
